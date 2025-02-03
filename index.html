@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>awscloud</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+        #question_page, #scoreBoard, #highscore_page {
+            display: none;
+        }
+        #timer {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .question, .choices {
+            margin: 20px 0;
+        }
+        .choices button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="introduction">
+            <h1>Welcome to the CompTIA Sec+ Exam!</h1>
+            <button id="start_button">Start Quiz</button>
+        </div>
+        <div id="question_page">
+            <div id="timer">Time left: 30:00</div>
+            <div id="ask_question" class="question"></div>
+            <div class="choices">
+                <button id="answer_btn1" class="choice"></button>
+                <button id="answer_btn2" class="choice"></button>
+                <button id="answer_btn3" class="choice"></button>
+                <button id="answer_btn4" class="choice"></button>
+            </div>
+            <div id="check_line"></div>
+        </div>
+        <div id="scoreBoard">
+            <h2>Exam Completed!</h2>
+            <div id="final_score"></div>
+            <input type="text" id="initial" placeholder="Enter your initials">
+            <button id="submit_btn">Submit Score</button>
+        </div>
+        <div id="highscore_page">
+            <h2>High Scores</h2>
+            <ul id="score_record"></ul>
+            <button id="score_check">Check Exam Scores</button>
+            <button id="back_btn">Go Back</button>
+            <button id="clear_btn">Clear Scores</button>
+        </div>
+    </div>
+    <script>
+        var questionSource = [
+            { question: "What is the primary goal of information security?", choices: ["a. Detecting Intrusions", "b. Logging Events", "c. Confidentiality, Integrity, Availability", "d. System Maintenance"], answer: "c" },
+            { question: "Commonly used data types DO NOT include:", choices: ["a. strings", "b. booleans", "c. alerts", "d. numbers"], answer: "c" },
+            { question: "Types of attacks except?", choices: ["a. Network attack", "b. osi attack", "c. all ", "d. none"], answer: "a" },
+            { question: "How do you call a function named myFunction?", choices: ["a. call myFunction()", "b. call function myFunction()", "c. myFunction()", "d. call myFunction"], answer: "c" },
+            { question: "Threat actors are mostly active when?", choices: ["a. organized crime", "b. nation state", "c. 'equals'", "d. none"], answer: "b" },
+            { question: "The first index of an array is ____.", choices: ["a. 0", "b. 1", "c. 8", "d. any"], answer: "a" },
+            { question: "How many ports do we have?", choices: ["a.999", "b. 98787", "c.65335", "d. if i = 5"], answer: "c" },
+            { question: "Which event occurs when the user clicks on an HTML element?", choices: ["a. onclick", "b. onchange", "c. onmouseover", "d. onmouseclick"], answer: "a" },
+            { question: "Which protocol is used to secure HTTP connections?", choices: ["a. HTTP", "b. HTTPS", "c. FTP", "d. SSH"], answer: "b" },
+            { question: "Which of the following is a common hashing algorithm?", choices: ["a. SHA-256", "b. AES", "c. RSA", "d. SSL"], answer: "a" },
+            { question: "What does the principle of least privilege ensure?", choices: ["a. Maximum access to all users", "b. Minimal access necessary for users to perform their jobs", "c. Full access to all system administrators", "d. No access to external networks"], answer: "b" },
+            { question: "Which of the following is a common method of biometric authentication?", choices: ["a. Password", "b. Fingerprint", "c. PIN", "d. Security question"], answer: "b" },
+            { question: "What is the primary purpose of a disaster recovery plan?", choices: ["a. To encrypt data", "b. To ensure the continuity of operations in the event of a disaster", "c. To block malware", "d. To manage user access"], answer: "b" },
+            { question: "What is the main purpose of a security awareness training program?", choices: ["a. To encrypt data", "b. To educate employees about security policies and best practices", "c. To block malware", "d. To manage user access"], answer: "b" },
+            { question: "Which of the following is a common method used to secure a network?", choices: ["a. SSL/TLS", "b. FTP", "c. HTTP", "d. Firewalls"], answer: "d" },
+            { question: "What does the term 'integrity' refer to in information security?", choices: ["a. The accuracy and completeness of data", "b. The availability of data", "c. The confidentiality of data", "d. The encryption of data"], answer: "a" },
+            { question: "What is a common method used to protect against malware?", choices: ["a. Encryption", "b. Firewalls", "c. Antivirus software", "d. Biometric authentication"], answer: "c" },
+            { question: "What is the primary purpose of a Security Information and Event Management (SIEM) system?", choices: ["a. To monitor and analyze security events", "b. To block malware", "c. To encrypt data", "d. To manage user accounts"], answer: "a" },
+            { question: "Which of the following is a common method to protect against cross-site scripting (XSS) attacks?", choices: ["a. Input validation", "b. Data encryption", "c. Network segmentation", "d. Using strong passwords"], answer: "a" },
+            { question: "What is the main purpose of a certificate authority (CA)?", choices: ["a. To manage user access", "b. To issue and manage digital certificates", "c. To encrypt data", "d. To block malware"], answer: "b" },
+            { question: "What does the term 'encryption' refer to?", choices: ["a. The process of converting plaintext into ciphertext", "b. The process of backing up data", "c. The process of compressing data", "d. The process of decrypting data"], answer: "a" },
+            { question: "Which of the following is a common method to protect against brute-force attacks?", choices: ["a. Using complex passwords", "b. Encrypting data", "c. Using firewalls", "d. Implementing biometric authentication"], answer: "a" },
+            { question: "What is the primary purpose of an access control list (ACL)?", choices: ["a. To manage user access to resources", "b. To encrypt data", "c. To monitor network traffic", "d. To block malware"], answer: "a" },
+            { question: "Which of the following is a type of network-based attack?", choices: ["a. Phishing", "b. Man-in-the-middle", "c. SQL injection", "d. Ransomware"], answer: "b" },
+            { question: "What is the purpose of a digital signature?", choices: ["a. To encrypt data", "b. To verify the authenticity and integrity of a message", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure wireless networks?", choices: ["a. Using WEP", "b. Disabling SSID broadcast", "c. Using WPA2", "d. Using DHCP"], answer: "c" },
+            { question: "What is the primary purpose of a virtual private network (VPN)?", choices: ["a. To encrypt data", "b. To provide secure remote access", "c. To block malware", "d. To manage user accounts"], answer: "b" },
+            { question: "Which of the following is a common type of phishing attack?", choices: ["a. Spear phishing", "b. SQL injection", "c. Man-in-the-middle", "d. Cross-site scripting"], answer: "a" },
+            { question: "What does the term 'availability' refer to in information security?", choices: ["a. The accuracy and completeness of data", "b. The confidentiality of data", "c. The accessibility of data when needed", "d. The encryption of data"], answer: "c" },
+            { question: "Which of the following is a common method to protect against data breaches?", choices: ["a. Using complex passwords", "b. Encrypting sensitive data", "c. Using firewalls", "d. Implementing biometric authentication"], answer: "b" },
+            { question: "What is the primary purpose of a penetration test?", choices: ["a. To encrypt data", "b. To identify and exploit security vulnerabilities", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure endpoint devices?", choices: ["a. Using SSL/TLS", "b. Implementing antivirus software", "c. Using strong passwords", "d. Network segmentation"], answer: "b" },
+            { question: "What is the primary purpose of a data loss prevention (DLP) system?", choices: ["a. To monitor network traffic", "b. To prevent unauthorized data exfiltration", "c. To encrypt data", "d. To manage user access"], answer: "b" },
+            { question: "Which of the following is a common type of social engineering attack?", choices: ["a. SQL injection", "b. Phishing", "c. Man-in-the-middle", "d. Cross-site scripting"], answer: "b" },
+            { question: "What is the primary purpose of a security operations center (SOC)?", choices: ["a. To encrypt data", "b. To monitor and respond to security incidents", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure web applications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing biometric authentication"], answer: "a" },
+            { question: "What is the main purpose of multi-factor authentication (MFA)?", choices: ["a. To encrypt data", "b. To provide an additional layer of security", "c. To block malware", "d. To manage user access"], answer: "b" },
+            { question: "Which of the following is a common method to protect against ransomware?", choices: ["a. Using complex passwords", "b. Implementing antivirus software", "c. Backing up data regularly", "d. Using firewalls"], answer: "c" },
+            { question: "What does the term 'confidentiality' refer to in information security?", choices: ["a. The accuracy and completeness of data", "b. The availability of data", "c. The protection of data from unauthorized access", "d. The encryption of data"], answer: "c" },
+            { question: "Which of the following is a common method to secure network communications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing VPNs"], answer: "d" },
+            { question: "What is the primary purpose of a firewall?", choices: ["a. To encrypt data", "b. To monitor and control incoming and outgoing network traffic", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure email communications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing VPNs"], answer: "b" },
+            { question: "What is the primary purpose of a security policy?", choices: ["a. To encrypt data", "b. To define and document an organization's security requirements and procedures", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure mobile devices?", choices: ["a. Using SSL/TLS", "b. Implementing mobile device management (MDM) solutions", "c. Using strong passwords", "d. Network segmentation"], answer: "b" },
+            { question: "What is the primary purpose of a vulnerability assessment?", choices: ["a. To encrypt data", "b. To identify and prioritize security vulnerabilities", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure database systems?", choices: ["a. Using SSL/TLS", "b. Encrypting data", "c. Using strong passwords", "d. Implementing access controls"], answer: "d" },
+            { question: "What is the primary purpose of a network intrusion detection system (IDS)?", choices: ["a. To encrypt data", "b. To detect and alert on potential network intrusions", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure cloud environments?", choices: ["a. Using SSL/TLS", "b. Encrypting data", "c. Using firewalls", "d. Implementing access controls"], answer: "d" },
+            { question: "What is the primary purpose of a security audit?", choices: ["a. To encrypt data", "b. To review and evaluate an organization's security policies and procedures", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure web browsers?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing security extensions"], answer: "d" },
+            { question: "What is the primary purpose of a security incident response plan?", choices: ["a. To encrypt data", "b. To provide a structured approach to handle security incidents", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to protect against insider threats?", choices: ["a. Using complex passwords", "b. Encrypting data", "c. Implementing access controls", "d. Using firewalls"], answer: "c" },
+            { question: "What does the term 'availability' refer to in information security?", choices: ["a. The accuracy and completeness of data", "b. The confidentiality of data", "c. The accessibility of data when needed", "d. The encryption of data"], answer: "c" },
+            { question: "Which of the following is a common method to protect against data breaches?", choices: ["a. Using complex passwords", "b. Encrypting sensitive data", "c. Using firewalls", "d. Implementing biometric authentication"], answer: "b" },
+            { question: "What is the primary purpose of a penetration test?", choices: ["a. To encrypt data", "b. To identify and exploit security vulnerabilities", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure endpoint devices?", choices: ["a. Using SSL/TLS", "b. Implementing antivirus software", "c. Using strong passwords", "d. Network segmentation"], answer: "b" },
+            { question: "What is the primary purpose of a data loss prevention (DLP) system?", choices: ["a. To monitor network traffic", "b. To prevent unauthorized data exfiltration", "c. To encrypt data", "d. To manage user access"], answer: "b" },
+            { question: "Which of the following is a common type of social engineering attack?", choices: ["a. SQL injection", "b. Phishing", "c. Man-in-the-middle", "d. Cross-site scripting"], answer: "b" },
+            { question: "What is the primary purpose of a security operations center (SOC)?", choices: ["a. To encrypt data", "b. To monitor and respond to security incidents", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure web applications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing biometric authentication"], answer: "a" },
+            { question: "What is the main purpose of multi-factor authentication (MFA)?", choices: ["a. To encrypt data", "b. To provide an additional layer of security", "c. To block malware", "d. To manage user access"], answer: "b" },
+            { question: "Which of the following is a common method to protect against ransomware?", choices: ["a. Using complex passwords", "b. Implementing antivirus software", "c. Backing up data regularly", "d. Using firewalls"], answer: "c" },
+            { question: "What does the term 'confidentiality' refer to in information security?", choices: ["a. The accuracy and completeness of data", "b. The availability of data", "c. The protection of data from unauthorized access", "d. The encryption of data"], answer: "c" },
+            { question: "Which of the following is a common method to secure network communications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing VPNs"], answer: "d" },
+            { question: "What is the primary purpose of a firewall?", choices: ["a. To encrypt data", "b. To monitor and control incoming and outgoing network traffic", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure email communications?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing VPNs"], answer: "b" },
+            { question: "What is the primary purpose of a security policy?", choices: ["a. To encrypt data", "b. To define and document an organization's security requirements and procedures", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure mobile devices?", choices: ["a. Using SSL/TLS", "b. Implementing mobile device management (MDM) solutions", "c. Using strong passwords", "d. Network segmentation"], answer: "b" },
+            { question: "What is the primary purpose of a vulnerability assessment?", choices: ["a. To encrypt data", "b. To identify and prioritize security vulnerabilities", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure database systems?", choices: ["a. Using SSL/TLS", "b. Encrypting data", "c. Using strong passwords", "d. Implementing access controls"], answer: "d" },
+            { question: "What is the primary purpose of a network intrusion detection system (IDS)?", choices: ["a. To encrypt data", "b. To detect and alert on potential network intrusions", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure cloud environments?", choices: ["a. Using SSL/TLS", "b. Encrypting data", "c. Using firewalls", "d. Implementing access controls"], answer: "d" },
+            { question: "What is the primary purpose of a security audit?", choices: ["a. To encrypt data", "b. To review and evaluate an organization's security policies and procedures", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to secure web browsers?", choices: ["a. Using HTTPS", "b. Encrypting data", "c. Using firewalls", "d. Implementing security extensions"], answer: "d" },
+            { question: "What is the primary purpose of a security incident response plan?", choices: ["a. To encrypt data", "b. To provide a structured approach to handle security incidents", "c. To manage user access", "d. To block malware"], answer: "b" },
+            { question: "Which of the following is a common method to protect against insider threats?", choices: ["a. Using complex passwords", "b. Encrypting data", "c. Implementing access controls", "d. Using firewalls"], answer: "c" },
+            // Add more questions here to make a total of 120 unique questions
+        ];
+
+        var welcome = document.querySelector("#introduction");
+        var startBtn = document.querySelector("#start_button");
+        var questionPage = document.querySelector("#question_page");
+        var askQuestion = document.querySelector("#ask_question");
+        var reactButtons = document.querySelectorAll(".choice");
+        var checkLine = document.querySelector("#check_line");
+        var scoreBoard = document.querySelector("#scoreBoard");
+        var finalScore = document.querySelector("#final_score");
+        var userInitial = document.querySelector("#initial");
+        var submitBtn = document.querySelector("#submit_btn");
+        var scoreRecord = document.querySelector("#score_record");
+        var scoreCheck = document.querySelector("#score_check");
+        var backBtn = document.querySelector("#back_btn");
+        var clearBtn = document.querySelector("#clear_btn");
+        var timeLeft = document.getElementById("timer");
+        var highScorePage = document.querySelector("#highscore_page");
+        var finish = document.querySelector("#finish");
+
+        var timerInterval;
+        var secondsLeft = 2400; // 60 minutes
+        var questionNumber = 0;
+        var totalScore = 0;
+
+        function countdown() {
+            timerInterval = setInterval(function () {
+                secondsLeft--;
+                var minutes = Math.floor(secondsLeft / 60);
+                var seconds = secondsLeft % 60;
+                timeLeft.textContent = "Time left: " + minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeLeft.textContent = "Time is up!";
+                    finish.textContent = "Time is up!";
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function startQuiz() {
+            welcome.style.display = "none";
+            questionPage.style.display = "block";
+            questionNumber = 0;
+            countdown();
+            showQuestion(questionNumber);
+        }
+
+        function showQuestion(n) {
+            askQuestion.textContent = questionSource[n].question;
+            reactButtons.forEach((btn, index) => {
+                btn.textContent = questionSource[n].choices[index];
+                btn.value = questionSource[n].choices[index].charAt(0); // assuming choices are like "a. ...", "b. ..."
+            });
+        }
+
+        function checkAnswer(event) {
+            event.preventDefault();
+            checkLine.style.display = "block";
+            setTimeout(function () {
+                checkLine.style.display = 'none';
+            }, 1000);
+
+            if (questionSource[questionNumber].answer == event.target.value) {
+                checkLine.textContent = "Correct!";
+                totalScore++;
+            } else {
+                secondsLeft -= 10;
+                checkLine.textContent = "Wrong! The correct answer is " + questionSource[questionNumber].answer + ".";
+            }
+
+            if (questionNumber < questionSource.length - 1) {
+                questionNumber++;
+                showQuestion(questionNumber);
+            } else {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            clearInterval(timerInterval);
+            questionPage.style.display = "none";
+            scoreBoard.style.display = "block";
+            finalScore.textContent = "Your final score is: " + totalScore + " out of " + questionSource.length;
+        }
+
+        function saveScore() {
+            var scoreItem = {
+                user: userInitial.value,
+                score: totalScore
+            };
+            addItem(scoreItem);
+            renderScore();
+        }
+
+        function getScore() {
+            var currentList = localStorage.getItem("ScoreList");
+            if (currentList !== null) {
+                return JSON.parse(currentList);
+            } else {
+                return [];
+            }
+        }
+
+        function addItem(n) {
+            var addedList = getScore();
+            addedList.push(n);
+            localStorage.setItem("ScoreList", JSON.stringify(addedList));
+        }
+
+        function renderScore() {
+            scoreRecord.innerHTML = "";
+            var highScores = getScore().sort((a, b) => b.score - a.score).slice(0, 5);
+            highScores.forEach((item, index) => {
+                var li = document.createElement("li");
+                li.textContent = item.user + " - " + item.score;
+                li.setAttribute("data-index", index);
+                scoreRecord.appendChild(li);
+            });
+        }
+
+        startBtn.addEventListener("click", startQuiz);
+        reactButtons.forEach(function (click) {
+            click.addEventListener("click", checkAnswer);
+        });
+        submitBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            scoreBoard.style.display = "none";
+            highScorePage.style.display = "block";
+            saveScore();
+        });
+        scoreCheck.addEventListener("click", function (event) {
+            event.preventDefault();
+            scoreBoard.style.display = "none";
+            highScorePage.style.display = "block";
+            renderScore();
+        });
+        backBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            scoreBoard.style.display = "none";
+            welcome.style.display = "block";
+            location.reload();
+        });
+        clearBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            localStorage.clear();
+            renderScore();
+        });
+    </script>
+</body>
+</html>
